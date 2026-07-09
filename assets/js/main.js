@@ -408,6 +408,87 @@
     applyState();
   }
 
+  function initSidenotes() {
+    const article = document.querySelector(".content-article");
+    const bodyEl = document.querySelector(".content-article__body");
+    if (!article || !bodyEl) {
+      return;
+    }
+
+    const sidenotes = Array.from(bodyEl.querySelectorAll(".sidenote"));
+    if (sidenotes.length === 0) {
+      return;
+    }
+
+    // Mark the article so CSS can hide inline sidenote contents.
+    article.classList.add("sidenotes--initialized");
+
+    // Desktop: right-hand margin column.
+    let marginColumn = article.querySelector(".margin-notes");
+    if (!marginColumn) {
+      marginColumn = document.createElement("aside");
+      marginColumn.className = "margin-notes";
+      marginColumn.setAttribute("aria-label", "页边注");
+      article.appendChild(marginColumn);
+    }
+
+    // Narrow screens: end-of-article list (matches entropicthoughts.com).
+    let sidenotesList = article.querySelector(".sidenotes-list");
+    if (!sidenotesList) {
+      sidenotesList = document.createElement("section");
+      sidenotesList.className = "sidenotes-list";
+      sidenotesList.setAttribute("aria-label", "旁注");
+
+      const heading = document.createElement("h2");
+      heading.textContent = "Sidenotes";
+      sidenotesList.appendChild(heading);
+
+      const list = document.createElement("ol");
+      sidenotes.forEach((note) => {
+        const item = document.createElement("li");
+        const clone = note.cloneNode(true);
+        clone.removeAttribute("id");
+        const back = clone.querySelector(".sn-back");
+        if (back) {
+          back.remove();
+        }
+        item.appendChild(clone);
+        list.appendChild(item);
+      });
+      sidenotesList.appendChild(list);
+      article.appendChild(sidenotesList);
+    }
+
+    function positionMarginNotes() {
+      marginColumn.innerHTML = "";
+      const articleRect = article.getBoundingClientRect();
+      sidenotes.forEach((note) => {
+        const ref = bodyEl.querySelector(`#snref-${note.id}`);
+        const clone = note.cloneNode(true);
+        clone.classList.add("margin-note");
+        clone.removeAttribute("id");
+        const back = clone.querySelector(".sn-back");
+        if (back) {
+          back.remove();
+        }
+        if (ref) {
+          const refRect = ref.getBoundingClientRect();
+          const top = refRect.top - articleRect.top;
+          clone.style.top = `${Math.round(top)}px`;
+        }
+        marginColumn.appendChild(clone);
+      });
+    }
+
+    positionMarginNotes();
+
+    let resizeTimeout;
+    window.addEventListener("resize", () => {
+      window.clearTimeout(resizeTimeout);
+      resizeTimeout = window.setTimeout(positionMarginNotes, 150);
+    });
+  }
+
   function initEnhancements() {
     const body = document.body;
     if (!body) {
@@ -420,6 +501,7 @@
     initSidebarPanels();
     initCollapsibleToc();
     initActiveToc();
+    initSidenotes();
 
     const codeBlocks = Array.from(document.querySelectorAll("pre code")).filter((codeEl) => {
       if (!codeEl) {

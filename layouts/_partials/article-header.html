@@ -33,42 +33,34 @@
   {{- end -}}
 {{- end -}}
 {{- $hasHero := ne $heroURL "" -}}
+{{- $dateHuman := .Date.Format "2006-01-02" -}}
 
-<header class="content-article__header{{ if not $hasHero }} content-article__header--plain{{ end }}">
-  <div class="content-article__hero"{{ if $hasHero }} style="--article-hero:url('{{ $heroURL | safeURL }}');"{{ end }}>
-    <div class="content-article__hero-meta">
-      {{- $meta := newScratch -}}
-      {{- $meta.Set "count" 0 -}}
-
-      {{- $dateHuman := .Date.Format "2006-01-02" -}}
+<header class="content-article__header">
+  <div class="content-article__masthead">
+    <h1>{{ .Title }}</h1>
+    <div class="content-article__byline">
       {{- if ne $dateHuman "0001-01-01" -}}
         {{- $dateMachine := .Date | time.Format "2006-01-02T15:04:05-07:00" -}}
-        <span><time datetime="{{ $dateMachine }}">{{ $dateHuman }}</time></span>
-        {{- $meta.Add "count" 1 -}}
+        <span class="content-article__byline-item">
+          <time datetime="{{ $dateMachine }}">{{ $dateHuman }}</time>
+        </span>
       {{- end -}}
-
-      {{- with or .Lastmod .Date -}}
-        {{- $lastmodHuman := .Format "2006-01-02" -}}
-        {{- if and (ne $lastmodHuman "0001-01-01") (ne $lastmodHuman $dateHuman) -}}
-          {{- if gt ($meta.Get "count") 0 -}}<span aria-hidden="true">·</span>{{- end -}}
-          <span>{{ $lastmodHuman }}</span>
-          {{- $meta.Add "count" 1 -}}
-        {{- end -}}
-      {{- end -}}
-
-      {{- with .Params.categories -}}
-        {{- if gt ($meta.Get "count") 0 -}}<span aria-hidden="true">·</span>{{- end -}}
-        <span>{{ index . 0 }}</span>
-        {{- $meta.Add "count" 1 -}}
-      {{- end -}}
-
-      {{- if gt .WordCount 0 -}}
-        {{- if gt ($meta.Get "count") 0 -}}<span aria-hidden="true">·</span>{{- end -}}
-        <span>{{ printf "%d 字" .WordCount }}</span>
+      {{- with .Params.tags -}}
+        <span class="content-article__byline-item content-article__byline-item--tags">
+          Tags:
+          {{- range $i, $tag := . -}}
+            {{- if $i }}, {{ end }}
+            <a href="{{ "/tags/" | relLangURL }}{{ $tag | urlize }}">{{ $tag }}</a>
+          {{- end -}}
+        </span>
       {{- end -}}
     </div>
-    <h1>{{ .Title }}</h1>
   </div>
+  {{- if $hasHero -}}
+    <figure class="content-article__hero">
+      <img src="{{ $heroURL | safeURL }}" alt="" loading="lazy">
+    </figure>
+  {{- end -}}
   {{- with .Params.summary -}}
     <p class="content-article__summary">{{ . }}</p>
   {{- end -}}

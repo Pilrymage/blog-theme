@@ -22,58 +22,24 @@
   {{ block "extra_head" . }}{{ end }}
 </head>
 <body class="{{ if .IsHome }}is-home{{ end }}" data-feature-copy="{{ cond (default true $features.copyCode) "true" "false" }}" data-feature-highlight="{{ cond (default true $features.syntaxHighlight) "true" "false" }}">
-  {{ if .IsHome }}
-    <div class="home-shell">
-      <header class="home-top-header">
-        <div class="home-top-header__inner">
-          <a class="home-top-header__brand" href="{{ "/" | relLangURL }}" aria-label="{{ .Site.Title }}">{{ .Site.Title }}</a>
-          {{ with .Site.Menus.main }}
-            <nav class="home-top-header__nav" aria-label="站点导航">
-              {{ range . }}
-                <a href="{{ if .Page }}{{ .Page.RelPermalink }}{{ else }}{{ .URL | relLangURL }}{{ end }}">{{ .Name }}</a>
-              {{ end }}
-            </nav>
-          {{ end }}
-        </div>
-      </header>
-      <main id="main-content" class="home-main" role="main">
-        {{ block "main" . }}{{ end }}
-      </main>
-      {{ partial "footer.html" . }}
-    </div>
-  {{ else }}
-    <div class="layout-grid">
-      <aside class="layout-sidebar layout-sidebar--primary" id="primarySidebar" data-sidebar-panel>
-        <div class="layout-sidebar__inner">
-          <button type="button" class="sidebar-panel__close" data-sidebar-close aria-label="关闭导航侧栏">关闭</button>
-          {{ partial "header.html" . }}
-        </div>
-      </aside>
-      <div class="layout-main">
-        <div class="layout-mobile-actions">
-          <button type="button" class="sidebar-trigger" data-sidebar-toggle="primarySidebar">
-            导航
-          </button>
-          <button type="button" class="sidebar-trigger" data-sidebar-toggle="contextSidebar">
-            侧栏
-          </button>
-        </div>
-        <div class="layout-main__columns">
-          <main id="main-content" class="layout-main__content" role="main">
-            {{ block "main" . }}{{ end }}
-          </main>
-          <aside class="layout-sidebar layout-sidebar--context" id="contextSidebar" data-sidebar-panel>
-              <button type="button" class="sidebar-panel__close" data-sidebar-close aria-label="关闭上下文侧栏">关闭</button>
-              {{ block "context_sidebar" . }}
-                {{ partial "sidebar-context.html" . }}
-              {{ end }}
-          </aside>
-        </div>
-        {{ partial "footer.html" . }}
+  <div class="site-shell{{ if .IsHome }} home-shell{{ end }}">
+    <header class="site-top-header">
+      <div class="site-top-header__inner">
+        <a class="site-top-header__brand" href="{{ "/" | relLangURL }}" aria-label="{{ .Site.Title }}">{{ .Site.Title }}</a>
+        {{ with .Site.Menus.main }}
+          <nav class="site-top-header__nav" aria-label="站点导航">
+            {{ range . }}
+              <a href="{{ if .Page }}{{ .Page.RelPermalink }}{{ else }}{{ .URL | relLangURL }}{{ end }}">{{ .Name }}</a>
+            {{ end }}
+          </nav>
+        {{ end }}
       </div>
-    </div>
-  {{ end }}
-  <div class="sidebar-overlay" data-sidebar-overlay></div>
+    </header>
+    <main id="main-content" class="site-main {{ if .IsHome }}site-main--home{{ else }}site-main--page{{ end }}" role="main">
+      {{ block "main" . }}{{ end }}
+    </main>
+    {{ partial "footer.html" . }}
+  </div>
   {{ if (default true $features.syntaxHighlight) }}
     <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
   {{ end }}
