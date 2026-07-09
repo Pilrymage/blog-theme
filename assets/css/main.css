@@ -766,6 +766,16 @@ body.has-sidebar-open .sidebar-overlay {
   margin-right: 0.25rem;
 }
 
+.sidenote-number a {
+  color: inherit;
+  border-bottom: none;
+}
+
+.sidenote-number a:hover,
+.sidenote-number a:focus {
+  color: var(--accent);
+}
+
 .sn-back {
   margin-left: 0.25rem;
   border-bottom: none;
@@ -825,6 +835,14 @@ body.has-sidebar-open .sidebar-overlay {
   display: none;
 }
 
+.margin-note:target {
+  color: var(--text-main);
+}
+
+.margin-note:target .sidenote-number {
+  color: var(--accent);
+}
+
 .sidenotes-list {
   display: none;
   grid-column: 1 / -1;
@@ -845,20 +863,20 @@ body.has-sidebar-open .sidebar-overlay {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  counter-reset: sidenote;
 }
 
 .sidenotes-list li {
-  counter-increment: sidenote;
   font-size: 0.95rem;
   line-height: 1.6;
   color: var(--text-muted);
 }
 
-.sidenotes-list li::before {
-  content: counter(sidenote) " ";
-  font-weight: 600;
-  margin-right: 0.35rem;
+.sidenotes-list li:target {
+  color: var(--text-main);
+}
+
+.sidenotes-list li:target .sidenote-number {
+  color: var(--accent);
 }
 
 @media (max-width: 1099px) {
@@ -1199,10 +1217,6 @@ a:focus {
 
 .content-article__body p {
   margin: 1.1rem 0;
-}
-
-.content-article__body p + p {
-  text-indent: 2em;
 }
 
 .content-article__body pre {

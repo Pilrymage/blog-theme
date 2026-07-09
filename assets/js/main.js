@@ -420,6 +420,12 @@
       return;
     }
 
+    // Capture IDs before hiding the inline notes so we can route hash links to
+    // the visible clones (margin notes or list items) instead.
+    sidenotes.forEach((note) => {
+      note.dataset.noteId = note.id;
+    });
+
     // Mark the article so CSS can hide inline sidenote contents.
     article.classList.add("sidenotes--initialized");
 
@@ -434,6 +440,7 @@
 
     // Narrow screens: end-of-article list (matches entropicthoughts.com).
     let sidenotesList = article.querySelector(".sidenotes-list");
+    let listItems = [];
     if (!sidenotesList) {
       sidenotesList = document.createElement("section");
       sidenotesList.className = "sidenotes-list";
@@ -445,6 +452,7 @@
 
       const list = document.createElement("ol");
       sidenotes.forEach((note) => {
+        const noteId = note.dataset.noteId;
         const item = document.createElement("li");
         const clone = note.cloneNode(true);
         clone.removeAttribute("id");
@@ -452,18 +460,40 @@
         if (back) {
           back.remove();
         }
+        linkifySidenoteNumber(clone, `snref-${noteId}`);
         item.appendChild(clone);
         list.appendChild(item);
+        listItems.push(item);
       });
       sidenotesList.appendChild(list);
       article.appendChild(sidenotesList);
     }
 
+    function linkifySidenoteNumber(clone, refId) {
+      const num = clone.querySelector(".sidenote-number");
+      if (!num || !refId) {
+        return;
+      }
+      const link = document.createElement("a");
+      link.href = `#${refId}`;
+      link.setAttribute("aria-label", "返回正文");
+      while (num.firstChild) {
+        link.appendChild(num.firstChild);
+      }
+      num.appendChild(link);
+    }
+
     function positionMarginNotes() {
       marginColumn.innerHTML = "";
-      const articleRect = article.getBoundingClientRect();
+      const columnRect = marginColumn.getBoundingClientRect();
+      const noteGap = 16;
+      const items = [];
+
+      // First pass: render each note at its ideal position (relative to the
+      // margin column) but keep it invisible so we can measure heights.
       sidenotes.forEach((note) => {
-        const ref = bodyEl.querySelector(`#snref-${note.id}`);
+        const noteId = note.dataset.noteId;
+        const ref = bodyEl.querySelector(`#snref-${noteId}`);
         const clone = note.cloneNode(true);
         clone.classList.add("margin-note");
         clone.removeAttribute("id");
@@ -471,22 +501,75 @@
         if (back) {
           back.remove();
         }
+        linkifySidenoteNumber(clone, `snref-${noteId}`);
+
+        let desiredTop = 0;
         if (ref) {
-          const refRect = ref.getBoundingClientRect();
-          const top = refRect.top - articleRect.top;
-          clone.style.top = `${Math.round(top)}px`;
+          desiredTop = Math.round(ref.getBoundingClientRect().top - columnRect.top);
         }
+        clone.style.top = `${desiredTop}px`;
+        clone.style.visibility = "hidden";
         marginColumn.appendChild(clone);
+        items.push({ clone, desiredTop });
+      });
+
+      // Second pass: push notes down when they would overlap the previous one.
+      let nextAvailableTop = -Infinity;
+      items.forEach(({ clone, desiredTop }) => {
+        const top = Math.max(desiredTop, nextAvailableTop);
+        clone.style.top = `${top}px`;
+        clone.style.visibility = "";
+        nextAvailableTop = top + clone.offsetHeight + noteGap;
       });
     }
 
+    function assignVisibleNoteIds() {
+      const isNarrow = window.matchMedia("(max-width: 1099px)").matches;
+      sidenotes.forEach((note, index) => {
+        const noteId = note.dataset.noteId;
+        const marginNote = marginColumn.children[index];
+        const listItem = listItems[index];
+        if (marginNote) {
+          marginNote.id = isNarrow ? "" : noteId;
+        }
+        if (listItem) {
+          listItem.id = isNarrow ? noteId : "";
+        }
+      });
+    }
+
+    function revealHashTarget() {
+      const hash = window.location.hash;
+      if (!hash) {
+        return;
+      }
+      const target = document.getElementById(hash.slice(1));
+      if (target) {
+        target.scrollIntoView({ behavior: "instant", block: "start" });
+      }
+    }
+
     positionMarginNotes();
+    assignVisibleNoteIds();
+
+    // Remove IDs from the hidden inline notes; visible clones now own them.
+    sidenotes.forEach((note) => note.removeAttribute("id"));
 
     let resizeTimeout;
     window.addEventListener("resize", () => {
       window.clearTimeout(resizeTimeout);
-      resizeTimeout = window.setTimeout(positionMarginNotes, 150);
+      resizeTimeout = window.setTimeout(() => {
+        positionMarginNotes();
+        assignVisibleNoteIds();
+      }, 150);
     });
+
+    window.matchMedia("(max-width: 1099px)").addEventListener("change", () => {
+      assignVisibleNoteIds();
+      revealHashTarget();
+    });
+
+    revealHashTarget();
   }
 
   function initEnhancements() {
