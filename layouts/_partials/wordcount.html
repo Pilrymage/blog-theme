@@ -1,0 +1,19 @@
+{{- $plain := .Plain | plainify -}}
+{{- $normalized := replaceRE `[\r\n\t]+` " " $plain | trim " " -}}
+{{- if ne $normalized "" -}}
+  {{- $cjkPattern := `[\p{Han}\p{Hiragana}\p{Katakana}\p{Hangul}]` -}}
+  {{- $cjkMatches := findRE $cjkPattern $normalized -}}
+  {{- $cjkCount := len $cjkMatches -}}
+  {{- $nonCjkBase := replaceRE $cjkPattern " " $normalized -}}
+  {{- $nonCjkSanitized := replaceRE `[^0-9A-Za-zÀ-ÖØ-öø-ÿĀ-ſƀ-ȳ’']` " " $nonCjkBase -}}
+  {{- $nonCjkCollapsed := replaceRE `\s+` " " $nonCjkSanitized -}}
+  {{- $nonCjkTrim := trim $nonCjkCollapsed " " -}}
+  {{- $nonCjkCount := 0 -}}
+  {{- if ne $nonCjkTrim "" -}}
+    {{- $nonCjkCount = len (split $nonCjkTrim " ") -}}
+  {{- end -}}
+  {{- $total := add $cjkCount $nonCjkCount -}}
+  {{- if gt $total 0 -}}
+    {{- printf "%s 字" (lang.FormatNumber 0 $total) -}}
+  {{- end -}}
+{{- end -}}

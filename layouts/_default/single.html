@@ -1,0 +1,17 @@
+{{ define "main" }}
+<article class="content-article">
+  {{ partial "article-header.html" . }}
+  <div class="content-article__body">{{ .Content }}</div>
+  <footer class="content-article__footer">
+    {{ partial "terms.html" (dict "taxonomy" "tags" "page" .) }}
+    <nav class="post-nav" aria-label="Post navigation">
+      {{ with .PrevInSection }}
+      <a class="post-nav__item prev" href="{{ .RelPermalink }}">&larr; {{ .Title }}</a>
+      {{ end }}
+      {{ with .NextInSection }}
+      <a class="post-nav__item next" href="{{ .RelPermalink }}">{{ .Title }} &rarr;</a>
+      {{ end }}
+    </nav>
+  </footer>
+</article>
+{{ end }}

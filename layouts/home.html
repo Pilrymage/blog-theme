@@ -1,0 +1,82 @@
+{{ define "main" }}
+  {{ $homeSections := slice "posts" "reviews" }}
+  {{ $entries := where .Site.RegularPages "Section" "in" $homeSections }}
+  {{ $sorted := $entries.ByDate.Reverse }}
+  {{ $paginator := .Paginate $sorted 10 }}
+  {{ $total := len $entries }}
+  {{ $homeInfo := .Site.Params.homeInfoParams | default dict }}
+
+  <div class="home-index">
+    <header class="home-index__header">
+      <h1 class="home-index__title">Index</h1>
+      {{ with $homeInfo.Content }}
+        <div class="home-index__intro">
+          {{ . | markdownify }}
+        </div>
+      {{ end }}
+    </header>
+
+    {{ with $homeInfo.Content }}
+      <aside class="home-index__notice">
+        <p>这里是一份精选文章的索引。如果是第一次来访，可以从 <a href="{{ "/posts" | relLangURL }}">归档</a> 浏览全部内容。</p>
+      </aside>
+    {{ end }}
+
+    <section class="home-section" aria-labelledby="recent-heading">
+      <h2 class="home-section__title" id="recent-heading">Most Recent</h2>
+      {{ if not (gt $total 0) }}
+        <p class="home-empty">暂无文章，稍后再来看看。</p>
+      {{ else }}
+        <ul class="home-list">
+          {{ range $paginator.Pages }}
+            <li class="home-list__item">
+              <time class="home-list__date" datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2006-01-02" }}</time>
+              <a class="home-list__title" href="{{ .RelPermalink }}" aria-label="阅读 {{ .Title }}">{{ .Title }}</a>
+              {{ with .Params.tags }}
+                <div class="home-list__tags">
+                  {{ range first 4 . }}
+                    <span>{{ . }}</span>
+                  {{ end }}
+                </div>
+              {{ end }}
+            </li>
+          {{ end }}
+        </ul>
+
+        {{ if gt $paginator.TotalPages 1 }}
+          <nav class="home-pager" aria-label="分页">
+            <ul class="home-pager__list">
+              <li>
+                {{ with $paginator.Prev }}
+                  <a class="home-pager__link home-pager__link--nav" href="{{ .URL }}">上一页</a>
+                {{ else }}
+                  <span class="home-pager__link home-pager__link--nav is-disabled">上一页</span>
+                {{ end }}
+              </li>
+              {{ range $p := $paginator.Pagers }}
+                <li>
+                  {{ if eq $p.PageNumber $paginator.PageNumber }}
+                    <span class="home-pager__link is-active">{{ $p.PageNumber }}</span>
+                  {{ else }}
+                    <a class="home-pager__link" href="{{ $p.URL }}">{{ $p.PageNumber }}</a>
+                  {{ end }}
+                </li>
+              {{ end }}
+              <li>
+                {{ with $paginator.Next }}
+                  <a class="home-pager__link home-pager__link--nav" href="{{ .URL }}">下一页</a>
+                {{ else }}
+                  <span class="home-pager__link home-pager__link--nav is-disabled">下一页</span>
+                {{ end }}
+              </li>
+            </ul>
+          </nav>
+        {{ end }}
+      {{ end }}
+    </section>
+
+    <footer class="home-index__footer">
+      <p>查看全部文章请访问 <a href="{{ "/posts" | relLangURL }}">归档</a>。</p>
+    </footer>
+  </div>
+{{ end }}

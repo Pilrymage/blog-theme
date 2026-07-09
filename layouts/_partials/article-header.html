@@ -1,0 +1,75 @@
+{{- /* Shared header for regular content pages (posts, reviews, standalone pages). */ -}}
+{{- $hero := "" -}}
+{{- with .Params.hero -}}
+  {{- if (reflect.IsMap .) -}}
+    {{- with or .image .src .url -}}
+      {{- $hero = . -}}
+    {{- end -}}
+  {{- else -}}
+    {{- $hero = . -}}
+  {{- end -}}
+{{- end -}}
+{{- if and (eq $hero "") (.Params.cover) -}}
+  {{- with .Params.cover.hero -}}
+    {{- $hero = . -}}
+  {{- end -}}
+{{- end -}}
+{{- if and (eq $hero "") (.Params.heroImage) -}}
+  {{- $hero = .Params.heroImage -}}
+{{- end -}}
+{{- if and (eq $hero "") (.Params.featured_image) -}}
+  {{- $hero = .Params.featured_image -}}
+{{- end -}}
+{{- if and (eq $hero "") (.Params.image) -}}
+  {{- $hero = .Params.image -}}
+{{- end -}}
+
+{{- $heroURL := "" -}}
+{{- if $hero -}}
+  {{- if or (hasPrefix $hero "http://") (hasPrefix $hero "https://") -}}
+    {{- $heroURL = $hero -}}
+  {{- else -}}
+    {{- $heroURL = $hero | absURL -}}
+  {{- end -}}
+{{- end -}}
+{{- $hasHero := ne $heroURL "" -}}
+
+<header class="content-article__header{{ if not $hasHero }} content-article__header--plain{{ end }}">
+  <div class="content-article__hero"{{ if $hasHero }} style="--article-hero:url('{{ $heroURL | safeURL }}');"{{ end }}>
+    <div class="content-article__hero-meta">
+      {{- $meta := newScratch -}}
+      {{- $meta.Set "count" 0 -}}
+
+      {{- $dateHuman := .Date.Format "2006-01-02" -}}
+      {{- if ne $dateHuman "0001-01-01" -}}
+        {{- $dateMachine := .Date | time.Format "2006-01-02T15:04:05-07:00" -}}
+        <span><time datetime="{{ $dateMachine }}">{{ $dateHuman }}</time></span>
+        {{- $meta.Add "count" 1 -}}
+      {{- end -}}
+
+      {{- with or .Lastmod .Date -}}
+        {{- $lastmodHuman := .Format "2006-01-02" -}}
+        {{- if and (ne $lastmodHuman "0001-01-01") (ne $lastmodHuman $dateHuman) -}}
+          {{- if gt ($meta.Get "count") 0 -}}<span aria-hidden="true">·</span>{{- end -}}
+          <span>{{ $lastmodHuman }}</span>
+          {{- $meta.Add "count" 1 -}}
+        {{- end -}}
+      {{- end -}}
+
+      {{- with .Params.categories -}}
+        {{- if gt ($meta.Get "count") 0 -}}<span aria-hidden="true">·</span>{{- end -}}
+        <span>{{ index . 0 }}</span>
+        {{- $meta.Add "count" 1 -}}
+      {{- end -}}
+
+      {{- if gt .WordCount 0 -}}
+        {{- if gt ($meta.Get "count") 0 -}}<span aria-hidden="true">·</span>{{- end -}}
+        <span>{{ printf "%d 字" .WordCount }}</span>
+      {{- end -}}
+    </div>
+    <h1>{{ .Title }}</h1>
+  </div>
+  {{- with .Params.summary -}}
+    <p class="content-article__summary">{{ . }}</p>
+  {{- end -}}
+</header>

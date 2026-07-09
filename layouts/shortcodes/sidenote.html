@@ -1,0 +1,12 @@
+{{- $n := .Ordinal -}}
+{{- $id := printf "sn-%d" $n -}}
+
+<!-- <sup class="sn-ref" id="snref-{{ $id }}">
+  <a href="#{{ $id }}" aria-label="Sidenote {{ $n }}">{{ $n }}</a>
+</sup> -->
+
+<span class="sidenote" id="{{ $id }}">
+  <!-- <span class="sidenote-number">{{ $n }}.</span> -->
+  {{ .Inner | markdownify }}
+  <!-- <a class="sn-back" href="#snref-{{ $id }}" aria-label="Back to reference">↩</a> -->
+</span>

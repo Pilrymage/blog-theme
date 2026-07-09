@@ -1,0 +1,22 @@
+{{ define "main" }}
+  {{ $pages := .RegularPagesRecursive }}
+  <section class="content-section">
+    <header class="content-section__header">
+      <h1>{{ .Title }}</h1>
+      {{ with .Content }}
+        <div class="section-lead">{{ . }}</div>
+      {{ end }}
+    </header>
+    <ul class="post-list__items">
+      {{ range $pages.ByDate.Reverse }}
+        <li>
+          <a class="post-link" href="{{ .RelPermalink }}">{{ .LinkTitle }}</a>
+          <div class="post-meta">
+            <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2006-01-02" }}</time>
+          </div>
+          <p class="post-blurb">{{ .Summary }}</p>
+        </li>
+      {{ end }}
+    </ul>
+  </section>
+{{ end }}

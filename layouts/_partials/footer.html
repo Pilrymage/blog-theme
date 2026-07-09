@@ -1,0 +1,6 @@
+<footer class="site-footer">
+  <p>&copy; {{ now.Format "2006" }} {{ .Site.Title }} · 由 Hugo 驱动</p>
+  {{ with .Site.Params.footerNote }}
+    <p class="site-footer__note">{{ . | markdownify }}</p>
+  {{ end }}
+</footer>

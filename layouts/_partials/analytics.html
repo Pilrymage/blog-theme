@@ -1,0 +1,25 @@
+{{- $analytics := .Site.Params.analytics | default dict -}}
+{{- $provider := $analytics.provider | default "" | lower -}}
+{{- if eq $provider "plausible" -}}
+  {{- with $analytics.domain }}
+    <script defer data-domain="{{ . }}" src="https://plausible.io/js/script.js"></script>
+  {{- end }}
+{{- else if eq $provider "goatcounter" -}}
+  {{- with $analytics.domain }}
+    <script data-goatcounter="https://{{ . }}.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+  {{- end }}
+{{- else if or (eq $provider "ga") (eq $provider "gtag") -}}
+  {{- with $analytics.propertyID }}
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ . }}"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', '{{ . }}');
+    </script>
+  {{- end }}
+{{- else if eq $provider "umami" -}}
+  {{- if and $analytics.scriptURL $analytics.websiteID }}
+    <script async src="{{ $analytics.scriptURL }}" data-website-id="{{ $analytics.websiteID }}"></script>
+  {{- end }}
+{{- end }}

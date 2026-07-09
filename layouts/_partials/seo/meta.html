@@ -1,0 +1,126 @@
+{{- $page := . -}}
+{{- $site := .Site -}}
+{{- $seo := $site.Params.seo | default dict -}}
+{{- $title := cond $page.IsHome $site.Title $page.Title -}}
+{{- $description := "" -}}
+{{- if $page.Params.seoDescription -}}
+  {{- $description = $page.Params.seoDescription -}}
+{{- else if $page.Description -}}
+  {{- $description = $page.Description -}}
+{{- else if $page.Summary -}}
+  {{- $description = $page.Summary -}}
+{{- else if $seo.defaultDescription -}}
+  {{- $description = $seo.defaultDescription -}}
+{{- end -}}
+{{- if $description -}}
+  {{- $description = $description | plainify -}}
+{{- end -}}
+{{- $canonical := $page.Permalink -}}
+{{- $imageCandidate := "" -}}
+{{- with $page.Params.images }}
+  {{- $first := index . 0 -}}
+  {{- if $first -}}
+    {{- if (reflect.IsMap $first) -}}
+      {{- with or $first.src $first.url $first.image }}
+        {{- $imageCandidate = . -}}
+      {{- end -}}
+    {{- else }}
+      {{- $imageCandidate = $first -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- if not $imageCandidate }}
+  {{- with $page.Params.image }}
+    {{- if (reflect.IsMap .) -}}
+      {{- with or .src .url .image }}
+        {{- $imageCandidate = . -}}
+      {{- end -}}
+    {{- else }}
+      {{- $imageCandidate = . -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- if not $imageCandidate }}
+  {{- with $page.Params.cover }}
+    {{- if (reflect.IsMap .) -}}
+      {{- with or .src .url .image }}
+        {{- $imageCandidate = . -}}
+      {{- end -}}
+    {{- else }}
+      {{- $imageCandidate = . -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- if not $imageCandidate }}
+  {{- with $seo.defaultImage }}
+    {{- $imageCandidate = . -}}
+  {{- end -}}
+{{- end -}}
+{{- $image := "" -}}
+{{- with $imageCandidate }}
+  {{- $image = . | absURL -}}
+{{- end -}}
+
+{{- if $canonical }}
+  <link rel="canonical" href="{{ $canonical }}">
+{{- end }}
+{{- if $description }}
+  <meta name="description" content="{{ $description }}">
+{{- end }}
+{{- with or $page.Params.keywords $page.Params.tags }}
+  <meta name="keywords" content="{{ delimit . ", " }}">
+{{- end }}
+
+{{- if $seo.enableOpenGraph }}
+  <meta property="og:site_name" content="{{ $site.Title }}">
+  <meta property="og:title" content="{{ $title }}">
+  {{- if $description }}<meta property="og:description" content="{{ $description }}">{{ end }}
+  <meta property="og:type" content="{{ if $page.IsPage }}article{{ else }}website{{ end }}">
+  {{- if $canonical }}<meta property="og:url" content="{{ $canonical }}">{{ end }}
+  {{- if $image }}<meta property="og:image" content="{{ $image }}">{{ end }}
+  {{- if $page.IsPage }}
+    {{- with $page.Date }}<meta property="article:published_time" content="{{ .Format "2006-01-02T15:04:05Z07:00" }}">{{ end }}
+    {{- with $page.Lastmod }}<meta property="article:modified_time" content="{{ .Format "2006-01-02T15:04:05Z07:00" }}">{{ end }}
+    {{- with $page.Params.tags }}
+      {{- range . }}
+        <meta property="article:tag" content="{{ . }}">
+      {{- end }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+
+{{- if $seo.enableTwitter }}
+  <meta name="twitter:card" content="{{ if $image }}summary_large_image{{ else }}summary{{ end }}">
+  <meta name="twitter:title" content="{{ $title }}">
+  {{- if $description }}<meta name="twitter:description" content="{{ $description }}">{{ end }}
+  {{- if $image }}<meta name="twitter:image" content="{{ $image }}">{{ end }}
+{{- end }}
+
+{{- if $seo.enableJSONLD }}
+  {{- $schema := dict "@context" "https://schema.org" "url" $canonical -}}
+  {{- if $page.IsPage }}
+    {{- $schema = merge $schema (dict "@type" "Article" "headline" $title) -}}
+    {{- with $description }}
+      {{- $schema = merge $schema (dict "description" .) -}}
+    {{- end }}
+    {{- with $page.Date }}
+      {{- $schema = merge $schema (dict "datePublished" (.Format "2006-01-02T15:04:05Z07:00")) -}}
+    {{- end }}
+    {{- with $page.Lastmod }}
+      {{- $schema = merge $schema (dict "dateModified" (.Format "2006-01-02T15:04:05Z07:00")) -}}
+    {{- end }}
+    {{- $author := or $page.Params.author $site.Params.author $site.Author.name "" -}}
+    {{- if $author }}
+      {{- $schema = merge $schema (dict "author" (dict "@type" "Person" "name" $author)) -}}
+    {{- end }}
+  {{- else }}
+    {{- $schema = merge $schema (dict "@type" "WebSite" "name" $site.Title) -}}
+    {{- with $description }}
+      {{- $schema = merge $schema (dict "description" .) -}}
+    {{- end }}
+  {{- end }}
+  {{- if $image }}
+    {{- $schema = merge $schema (dict "image" (slice $image)) -}}
+  {{- end }}
+  <script type="application/ld+json">{{ $schema | jsonify }}</script>
+{{- end }}

@@ -1,0 +1,41 @@
+{{ $homeInfo := .Site.Params.homeInfoParams }}
+{{ $sections := .Site.Sections }}
+{{ $currentSection := cond .IsHome "" .Section }}
+{{ $highlight := cond .IsPage "" $currentSection }}
+{{ $titleRaw := plainify .Site.Title }}
+{{ $titleClean := trim $titleRaw " \t\r\n" }}
+{{ $initial := default "S" (printf "%.1s" $titleClean) }}
+<div class="primary-panel">
+  <div class="primary-panel__brand">
+    <a class="primary-panel__avatar" href="{{ "/" | relLangURL }}" aria-label="{{ .Site.Title }}">
+      <span>{{ $initial }}</span>
+    </a>
+    <div class="primary-panel__identity">
+      <a class="primary-panel__title" href="{{ "/" | relLangURL }}">{{ .Site.Title }}</a>
+      {{ with $homeInfo.Title }}
+        <p class="primary-panel__tagline">{{ . }}</p>
+      {{ else }}
+        <p class="primary-panel__tagline">{{ .Site.Params.description }}</p>
+      {{ end }}
+    </div>
+  </div>
+  {{ with .Site.Menus.main }}
+    <nav class="primary-panel__section" aria-label="站点导航">
+      <p class="primary-panel__section-label">导航</p>
+      <ul class="primary-panel__nav">
+        {{ range . }}
+          {{ $isActive := and $highlight (and .Page (eq $highlight (.Page.Section))) }}
+          {{ $linkClass := cond $isActive "is-active" "" }}
+          <li>
+            <a class="{{ $linkClass }}" href="{{ if .Page }}{{ .Page.RelPermalink }}{{ else }}{{ .URL | relLangURL }}{{ end }}">{{ .Name }}</a>
+          </li>
+        {{ end }}
+      </ul>
+    </nav>
+  {{ end }}
+  {{ with .Site.Params.homeInfoParams.Content }}
+    <div class="primary-panel__note">
+      {{ . | markdownify }}
+    </div>
+  {{ end }}
+</div>

@@ -1,0 +1,86 @@
+{{ define "main" }}
+  {{ $pages := .RegularPages }}
+  <section class="content-section posts-archive">
+    <header class="content-section__header">
+      <h1>{{ .Title }}</h1>
+      {{ with .Content }}
+        <div class="section-lead">{{ . }}</div>
+      {{ end }}
+    </header>
+
+    {{ if gt (len $pages) 0 }}
+      {{ $tagRegistry := dict }}
+      {{ range $page := $pages }}
+        {{ $year := $page.Date.Format "2006" }}
+        {{ $pageTags := slice }}
+        {{ with $page.Params.tags }}
+          {{ if reflect.IsSlice . }}
+            {{ $pageTags = . }}
+          {{ else }}
+            {{ $pageTags = slice . }}
+          {{ end }}
+        {{ end }}
+        {{ $combinedTags := $pageTags | append $year }}
+        {{ range $combinedTags }}
+          {{ $tag := . }}
+          {{ if not (index $tagRegistry $tag) }}
+            {{ $tagRegistry = merge $tagRegistry (dict $tag true) }}
+          {{ end }}
+        {{ end }}
+      {{ end }}
+
+      {{ $tagEntries := slice }}
+      {{ range $tag, $_ := $tagRegistry }}
+        {{ $isYear := gt (len (findRE "^[0-9]{4}$" $tag)) 0 }}
+        {{ $tagged := slice }}
+        {{ if $isYear }}
+          {{ $tagged = where $pages ".Date.Year" "eq" (int $tag) }}
+        {{ else }}
+          {{ $tagged = where $pages "Params.tags" "intersect" (slice $tag) }}
+        {{ end }}
+        {{ if gt (len $tagged) 0 }}
+          {{ $tagEntries = $tagEntries | append (dict "name" $tag "sortKey" (lower $tag) "pages" $tagged) }}
+        {{ end }}
+      {{ end }}
+      {{ $tagEntries = sort $tagEntries "sortKey" }}
+
+      <div class="posts-archive__layout">
+        <div class="posts-archive__groups">
+          {{ range $entry := $tagEntries }}
+            {{ $tag := $entry.name }}
+            {{ $anchor := printf "tag-%s" (urlize $tag) }}
+            {{ $tagged := $entry.pages }}
+            <section class="posts-archive__group" id="{{ $anchor }}">
+              <h2 class="posts-archive__tag">{{ $tag }}</h2>
+              <ul class="posts-archive__items">
+                {{ range sort $tagged "Date" "desc" }}
+                  <li>
+                    <a class="posts-archive__link" href="{{ .RelPermalink }}">{{ .LinkTitle }}</a>
+                  </li>
+                {{ end }}
+              </ul>
+            </section>
+          {{ end }}
+        </div>
+
+        <aside class="posts-archive__index">
+          <h2 class="posts-archive__index-title">标签索引</h2>
+          <ul class="posts-archive__index-list">
+            {{ range $entry := $tagEntries }}
+              {{ $tag := $entry.name }}
+              {{ $anchor := printf "#tag-%s" (urlize $tag) }}
+              <li class="posts-archive__index-item">
+                <a href="{{ $anchor }}">
+                  <span class="posts-archive__index-name">{{ $tag }}</span>
+                  <span class="posts-archive__index-count">{{ len $entry.pages }}</span>
+                </a>
+              </li>
+            {{ end }}
+          </ul>
+        </aside>
+      </div>
+    {{ else }}
+      <p class="posts-archive__empty">暂时还没有想法被记录。</p>
+    {{ end }}
+  </section>
+{{ end }}

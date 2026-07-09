@@ -1,0 +1,17 @@
+{{- $pages := where .Site.RegularPages "Params.excludeFromSearch" "ne" true -}}
+{{- $pages = where $pages "Layout" "ne" "search" -}}
+[
+{{- range $i, $page := $pages.ByDate.Reverse }}
+  {{- if $i }},{{ end }}
+  {
+    "title": {{ $page.Title | jsonify }},
+    "permalink": {{ $page.Permalink | jsonify }},
+    "summary": {{ $page.Summary | plainify | jsonify }},
+    "content": {{ $page.Plain | plainify | jsonify }},
+    "date": {{ $page.Date.Format "2006-01-02" | jsonify }},
+    "section": {{ $page.Section | default "" | jsonify }},
+    "type": {{ $page.Type | default "" | jsonify }},
+    "tags": {{ $page.Params.tags | default (slice) | jsonify }}
+  }
+{{- end }}
+]

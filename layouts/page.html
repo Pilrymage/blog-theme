@@ -1,0 +1,9 @@
+{{ define "main" }}
+<article class="content-article">
+  {{ partial "article-header.html" . }}
+  <div class="content-article__body">{{ .Content }}</div>
+  <footer class="content-article__footer">
+    {{ partial "terms.html" (dict "taxonomy" "tags" "page" .) }}
+  </footer>
+</article>
+{{ end }}
