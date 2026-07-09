@@ -1,6 +1,5 @@
 {{ define "main" }}
-  {{ $homeSections := slice "posts" "reviews" }}
-  {{ $entries := where .Site.RegularPages "Section" "in" $homeSections }}
+  {{ $entries := where .Site.RegularPages "Section" "posts" }}
   {{ $sorted := $entries.ByDate.Reverse }}
   {{ $paginator := .Paginate $sorted 10 }}
   {{ $total := len $entries }}
@@ -18,7 +17,7 @@
 
     {{ with $homeInfo.Content }}
       <aside class="home-index__notice">
-        <p>这里是一份精选文章的索引。如果是第一次来访，可以从 <a href="{{ "/posts" | relLangURL }}">归档</a> 浏览全部内容。</p>
+        <p>这里是一份精选文章的索引。如果是第一次来访，可以从 <a href="{{ "/tags" | relLangURL }}">标签</a> 浏览感兴趣的主题。</p>
       </aside>
     {{ end }}
 
@@ -76,7 +75,7 @@
     </section>
 
     <footer class="home-index__footer">
-      <p>查看全部文章请访问 <a href="{{ "/posts" | relLangURL }}">归档</a>。</p>
+      <p>按主题浏览文章请访问 <a href="{{ "/tags" | relLangURL }}">标签</a>。</p>
     </footer>
   </div>
 {{ end }}
